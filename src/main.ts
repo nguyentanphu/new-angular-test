@@ -2,118 +2,56 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import {
   Component,
   Directive,
-  Renderer2,
-  HostListener,
-  HostBinding,
-  ElementRef,
   NgModule,
   Input,
-  Output,
-  EventEmitter
+  OnInit,
+  ElementRef,
+  HostListener
 } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 
-class Joke {
-  public setup: string;
-  public punchline: string;
-  public hide: boolean;
-
-  constructor(setup: string, punchline: string) {
-    this.setup = setup;
-    this.punchline = punchline;
-    this.hide = true;
-  }
-
-  toggle() {
-    this.hide = !this.hide;
-  }
-}
-
 @Directive({
-  selector: '[ccCardHover]'
+  selector: 'img[ccRollover]'
 })
-class CardHoverDirective {
-  @Input('ccCardHover')
-  config = {
-    querySelector: '.card-text'
-  };
+class RolloverImageDirective implements OnInit {
+  @Input('ccRollover')
+  config: { initial: string; over: string };
 
-  @HostBinding('attr.role') private ishovering: boolean;
+  constructor(private el: ElementRef) {}
 
-  constructor(private el: ElementRef, private renderer: Renderer2) {
-    // renderer.setElementStyle(el.nativeElement, 'backgroundColor', 'gray');
+  ngOnInit(): void {
+    this.el.nativeElement.src = this.config.initial;
   }
 
-  @HostListener('mouseover') onMouseOver() {
-    debugger;
-    let part = this.el.nativeElement.querySelector(this.config.querySelector);
-    this.renderer.setStyle(part, 'display', 'block');
-    this.ishovering = true;
+  @HostListener('mouseover', ['$event'])
+  onMouseOver(event: MouseEvent) {
+    console.log(event);
+    this.el.nativeElement.src = this.config.over;
   }
 
-  @HostListener('mouseout') onMouseOut() {
-    let part = this.el.nativeElement.querySelector(this.config.querySelector);
-    this.renderer.setStyle(part, 'display', 'none');
-    this.ishovering = false;
-  }
-}
-
-@Component({
-  selector: 'joke',
-  template: `
-    <div class="card card-block" [ccCardHover]="{querySelector: '.card-text'}">
-      <h4 class="card-title">{{ data.setup }}</h4>
-      <p class="card-text" [style.display]="'none'">{{ data.punchline }}</p>
-    </div>
-  `
-})
-class JokeComponent {
-  @Input('joke') data: Joke;
-}
-
-@Component({
-  selector: 'joke-list',
-  template: `
-    <joke *ngFor="let j of jokes" [joke]="j"></joke>
-  `
-})
-class JokeListComponent {
-  jokes: Joke[];
-
-  constructor() {
-    this.jokes = [
-      new Joke(
-        'What did the cheese say when it looked in the mirror?',
-        'Hello-me (Halloumi)'
-      ),
-      new Joke(
-        'What kind of cheese do you use to disguise a small horse?',
-        'Mask-a-pony (Mascarpone)'
-      ),
-      new Joke(
-        'A kid threw a lump of cheddar at me',
-        'I thought ‘That’s not very mature’'
-      )
-    ];
+  @HostListener('mouseout', ['$event'])
+  onMouseOut(event: MouseEvent) {
+    console.log(event);
+    this.el.nativeElement.src = this.config.initial;
   }
 }
 
 @Component({
   selector: 'app',
   template: `
-    <joke-list></joke-list>
+    <img
+      [ccRollover]="{
+        initial: 'https://unsplash.it/200/300?image=201',
+        over: 'https://unsplash.it/200/300?image=202'
+      }"
+    />
   `
 })
 class AppComponent {}
 
 @NgModule({
   imports: [BrowserModule],
-  declarations: [
-    AppComponent,
-    JokeComponent,
-    JokeListComponent,
-    CardHoverDirective
-  ],
+  declarations: [AppComponent, RolloverImageDirective],
   bootstrap: [AppComponent]
 })
 export class AppModule {}
